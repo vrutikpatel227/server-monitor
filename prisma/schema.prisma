@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MonitorType {
+  WEBSITE
+  API
+}
+
+enum MonitorStatus {
+  UP
+  DOWN
+  DEGRADED
+  UNKNOWN
+}
+
+enum FailureType {
+  TIMEOUT
+  DNS
+  TLS
+  CONNECTION_REFUSED
+  NETWORK
+  UNKNOWN
+}
+
+enum IncidentStatus {
+  OPEN
+  RESOLVED
+}
+
+model Workspace {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  monitors Monitor[]
+  servers Server[]
+  alerts Alert[]
+  statusPages StatusPage[]
+  settings Setting[]
+  anonymousUser AnonymousUser?
+}
+
+model AnonymousUser {
+  id String @id @default(cuid())
+  anonymousId String @unique
+  workspaceId String @unique
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete:Cascade)
+  createdAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+}
+
+model Monitor {
+  id String @id @default(cuid())
+  workspaceId String
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete:Cascade)
+  name String
+  url String
+  type MonitorType @default(WEBSITE)
+  method String @default("GET")
+  intervalSeconds Int @default(60)
+  timeoutMs Int @default(10000)
+  expectedStatus Int @default(200)
+  headers Json?
+  requestBody String?
+  agentId String?
+  agent Agent? @relation(fields:[agentId], references:[id], onDelete:SetNull)
+  status MonitorStatus @default(UNKNOWN)
+  lastCheckedAt DateTime?
+  nextCheckAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  checks MonitorCheck[]
+  incidents Incident[]
+  statusPageMonitors StatusPageMonitor[]
+  @@index([workspaceId,status])
+  @@index([nextCheckAt])
+}
+
+model MonitorCheck {
+  id String @id @default(cuid())
+  monitorId String
+  monitor Monitor @relation(fields:[monitorId], references:[id], onDelete:Cascade)
+  checkedAt DateTime @default(now())
+  status MonitorStatus
+  httpStatus Int?
+  statusName String?
+  statusExplanation String?
+  responseTimeMs Int?
+  failureType FailureType?
+  failureMessage String?
+  sslExpiresAt DateTime?
+  sslDaysRemaining Int?
+  @@index([monitorId, checkedAt])
+}
+
+model Incident {
+  id String @id @default(cuid())
+  monitorId String
+  monitor Monitor @relation(fields:[monitorId], references:[id], onDelete:Cascade)
+  status IncidentStatus @default(OPEN)
+  startedAt DateTime @default(now())
+  resolvedAt DateTime?
+  failureType FailureType?
+  httpStatus Int?
+  title String
+  message String
+  @@index([monitorId,status])
+}
+
+model Server {
+  id String @id @default(cuid())
+  workspaceId String
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete:Cascade)
+  name String
+  hostname String?
+  status MonitorStatus @default(UNKNOWN)
+  os String?
+  agentVersion String?
+  lastHeartbeatAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  agents Agent[]
+  metrics ServerMetric[]
+  @@index([workspaceId])
+}
+
+model Agent {
+  id String @id @default(cuid())
+  serverId String
+  server Server @relation(fields:[serverId], references:[id], onDelete:Cascade)
+  name String
+  tokenHash String
+  version String?
+  os String?
+  lastHeartbeatAt DateTime?
+  createdAt DateTime @default(now())
+  monitors Monitor[]
+  @@index([serverId])
+}
+
+model ServerMetric {
+  id String @id @default(cuid())
+  serverId String
+  server Server @relation(fields:[serverId], references:[id], onDelete:Cascade)
+  recordedAt DateTime @default(now())
+  cpu Float
+  ram Float
+  disk Float
+  networkMbps Float
+  uptimeSeconds BigInt
+  @@index([serverId,recordedAt])
+}
+
+model Alert {
+  id String @id @default(cuid())
+  workspaceId String
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete:Cascade)
+  type String
+  monitorId String?
+  serverId String?
+  message String
+  sentAt DateTime @default(now())
+  @@index([workspaceId,sentAt])
+}
+
+model AlertChannel {
+  id String @id @default(cuid())
+  email String?
+  enabled Boolean @default(true)
+  createdAt DateTime @default(now())
+}
+
+model StatusPage {
+  id String @id @default(cuid())
+  workspaceId String
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete:Cascade)
+  name String
+  slug String @unique
+  enabled Boolean @default(false)
+  monitors StatusPageMonitor[]
+  createdAt DateTime @default(now())
+}
+
+model StatusPageMonitor {
+  id String @id @default(cuid())
+  statusPageId String
+  monitorId String
+  statusPage StatusPage @relation(fields:[statusPageId], references:[id], onDelete:Cascade)
+  monitor Monitor @relation(fields:[monitorId], references:[id], onDelete:Cascade)
+  @@unique([statusPageId,monitorId])
+}
+
+model Setting {
+  id String @id @default(cuid())
+  workspaceId String
+  workspace Workspace @relation(fields:[workspaceId], references:[id], onDelete:Cascade)
+  key String
+  value String
+  updatedAt DateTime @updatedAt
+  @@unique([workspaceId,key])
+}

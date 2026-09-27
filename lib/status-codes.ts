@@ -1,0 +1,28 @@
+export const HTTP_STATUS: Record<number,{name:string;explanation:string}> = {
+  100:{name:"Continue",explanation:"The initial part of a request has been received."},
+  101:{name:"Switching Protocols",explanation:"The server is switching protocols as requested."},
+  200:{name:"OK",explanation:"Request succeeded."},
+  201:{name:"Created",explanation:"The request succeeded and a new resource was created."},
+  202:{name:"Accepted",explanation:"The request was accepted for processing but may not be completed yet."},
+  204:{name:"No Content",explanation:"The request succeeded but there is no response body."},
+  301:{name:"Moved Permanently",explanation:"The requested resource has permanently moved to another URL."},
+  302:{name:"Found",explanation:"The requested resource is temporarily available at another URL."},
+  304:{name:"Not Modified",explanation:"The resource has not changed and the cached version can be used."},
+  400:{name:"Bad Request",explanation:"The server could not understand the request."},
+  401:{name:"Unauthorized",explanation:"Authentication is required or the provided credentials are invalid."},
+  403:{name:"Forbidden",explanation:"The server understood the request but refuses access."},
+  404:{name:"Not Found",explanation:"The requested resource could not be found."},
+  405:{name:"Method Not Allowed",explanation:"The HTTP method is not supported for this resource."},
+  408:{name:"Request Timeout",explanation:"The server timed out waiting for the request."},
+  409:{name:"Conflict",explanation:"The request conflicts with the current state of the resource."},
+  410:{name:"Gone",explanation:"The requested resource is no longer available."},
+  415:{name:"Unsupported Media Type",explanation:"The server does not support the format of the request."},
+  422:{name:"Unprocessable Content",explanation:"The request format is understood but contains invalid data."},
+  429:{name:"Too Many Requests",explanation:"The client has sent too many requests in a given period."},
+  500:{name:"Internal Server Error",explanation:"The server encountered an unexpected condition."},
+  501:{name:"Not Implemented",explanation:"The server does not support the functionality required by the request."},
+  502:{name:"Bad Gateway",explanation:"The gateway or proxy received an invalid response from the upstream server."},
+  503:{name:"Service Unavailable",explanation:"The server is currently unable to handle the request."},
+  504:{name:"Gateway Timeout",explanation:"The gateway or proxy did not receive a timely response from the upstream server."}
+};
+export function statusInfo(code:number){return HTTP_STATUS[code] ?? {name:"HTTP "+code,explanation:"The server returned HTTP status "+code+"."};}

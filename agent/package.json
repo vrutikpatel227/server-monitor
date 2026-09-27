@@ -1,0 +1,9 @@
+{
+  "name":"server-monitor-agent",
+  "private":true,
+  "type":"module",
+  "scripts":{"start":"tsx index.ts","build:exe":"pkg index.ts --targets node18-win-x64 --output dist/server-monitor-agent.exe"},
+  "dependencies":{"systeminformation":"latest"},
+  "devDependencies":{"pkg":"^5.8.1","tsx":"latest","typescript":"latest"},
+  "pkg":{"scripts":["index.ts"],"assets":["node_modules/systeminformation/lib/**/*","node_modules/systeminformation/package.json"]}
+}

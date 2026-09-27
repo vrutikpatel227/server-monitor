@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {db} from "@/lib/db";import {getWorkspaceId} from "@/lib/workspace";
+export async function GET(req:Request,{params}:{params:Promise<{id:string}>}){const {id}=await params;const workspaceId=await getWorkspaceId();const s=await db.server.findFirst({where:{id,workspaceId},include:{agents:true,metrics:{orderBy:{recordedAt:"desc"},take:1000}}});if(!s)return NextResponse.json({error:"Server not found"},{status:404});return NextResponse.json({...s,metrics:s.metrics.map(m=>({...m,uptimeSeconds:Number(m.uptimeSeconds)}))});}

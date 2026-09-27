@@ -1,0 +1,2 @@
+import {createHash,timingSafeEqual} from "node:crypto";import {db} from "./db";
+export async function authenticateAgent(req:Request,agentId:string){const token=req.headers.get("authorization")?.replace(/^Bearer\s+/i,"");if(!token)return null;const agent=await db.agent.findUnique({where:{id:agentId},include:{server:true}});if(!agent)return null;const hash=createHash("sha256").update(token).digest("hex");const a=Buffer.from(agent.tokenHash,"hex"),b=Buffer.from(hash,"hex");if(a.length!==b.length||!timingSafeEqual(a,b))return null;return agent;}

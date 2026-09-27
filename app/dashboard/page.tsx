@@ -1,0 +1,26 @@
+"use client";
+import {useEffect,useState} from "react";
+import {Activity,ArrowUpRight,Clock3,ShieldCheck,TriangleAlert} from "lucide-react";
+import Shell from "@/components/Shell";
+import MetricCard from "@/components/MetricCard";
+import StatusBadge from "@/components/StatusBadge";
+
+export default function Dashboard(){
+ const [data,setData]=useState<any>({monitors:[],stats:{},incidents:[],alerts:[]});
+ const load=()=>fetch("/api/dashboard").then(r=>r.json()).then(setData);
+ useEffect(()=>{load();const t=setInterval(load,10000);return()=>clearInterval(t)},[]);
+ const s=data.stats||{};
+ return <Shell><div className="space-y-6">
+  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="section-kicker mb-2">Overview</div><h1 className="text-3xl font-bold tracking-tight">Dashboard</h1><p className="muted mt-1 text-sm">Real-time health of your websites and APIs.</p></div><a href="/monitors" className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-[0_0_25px_#22d3ee18] hover:bg-cyan-300"><Activity size={16}/> Add Monitor <ArrowUpRight size={15}/></a></div>
+  <div className="grid-auto"><MetricCard label="Total Monitors" value={s.total??0} sub="Configured checks"/><MetricCard label="Online" value={s.online??0} sub="Healthy services"/><MetricCard label="Offline" value={s.offline??0} sub="Active failures"/><MetricCard label="Degraded" value={s.degraded??0} sub="Unexpected status"/><MetricCard label="Avg Response" value={(s.avgResponse??0)+" ms"} sub="Latest checks"/><MetricCard label="Overall Uptime" value={(s.uptime??0)+"%"} sub="Current workspace"/></div>
+  <div className="grid gap-6 xl:grid-cols-[1fr_330px]">
+   <div className="card overflow-hidden glow"><div className="flex items-center justify-between border-b border-[#202733] px-5 py-4"><div><div className="panel-title">Monitor health</div><div className="text-xs muted mt-1">Latest check from every endpoint</div></div><a href="/monitors" className="text-xs font-semibold text-cyan-300 hover:text-cyan-200">View all →</a></div>
+    <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-left text-[11px] uppercase tracking-wider text-slate-500"><th className="px-5 py-3">Monitor</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">HTTP Meaning</th><th className="px-4 py-3">Response</th><th className="px-4 py-3">Uptime</th><th className="px-5 py-3">Last checked</th></tr></thead><tbody>
+     {data.monitors.map((m:any)=>{const c=m.checks?.[0];const code=c?.httpStatus;return <tr key={m.id} className="table-row"><td className="px-5 py-4"><div className="font-semibold text-slate-100">{m.name}</div><div className="mt-1 max-w-[260px] truncate text-xs text-slate-500">{m.url}</div></td><td className="px-4"><StatusBadge status={m.status}/></td><td className="px-4"><div className="font-mono text-xs font-semibold">{code??"—"}{code!=null&&c?.statusName?" · "+c.statusName:""}</div><div className="mt-1 max-w-[280px] text-[11px] leading-4 text-slate-500">{code!=null?(c?.statusExplanation||"HTTP status received"):(c?.failureType?c.failureType.replaceAll("_"," "):"No HTTP response")}</div></td><td className="px-4 font-mono text-xs">{c?.responseTimeMs??"—"}{c?.responseTimeMs!=null?" ms":""}</td><td className="px-4">{m.uptime??0}%</td><td className="px-5 text-xs muted">{m.lastCheckedAt?new Date(m.lastCheckedAt).toLocaleString():"Never"}</td></tr>})}
+     {!data.monitors.length&&<tr><td colSpan={6} className="px-5 py-14 text-center"><ShieldCheck className="mx-auto mb-3 text-slate-600" size={30}/><div className="font-semibold">No monitors yet</div><div className="muted text-xs mt-1">Add your first website or API to start monitoring.</div></td></tr>}</tbody></table></div>
+   </div>
+   <div className="space-y-6"><div className="card p-5"><div className="flex items-center gap-2"><TriangleAlert size={17} className="text-amber-300"/><div className="panel-title">Active incidents</div></div><div className="mt-4 text-3xl font-bold">{(data.incidents||[]).filter((x:any)=>x.status==="OPEN").length}</div><div className="text-xs muted mt-1">Open issues in this workspace</div><a href="/incidents" className="mt-4 block text-xs font-semibold text-cyan-300">Review incidents →</a></div><div className="card p-5"><div className="flex items-center gap-2"><Clock3 size={17} className="text-violet-300"/><div className="panel-title">Check engine</div></div><div className="mt-3 text-xs muted">Public monitors continue in the background even when this dashboard is closed. Localhost checks run in your browser.</div></div></div>
+  </div>
+  <div className="card p-5"><div className="panel-title mb-3">HTTP status quick meaning</div><div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">{[["2xx","Success"],["3xx","Redirection"],["4xx","Client error"],["5xx","Server error"],["No response","DNS / TLS / timeout / connection"]].map(([a,b])=><div key={a} className="rounded-lg border border-[#202733] bg-[#090c11] p-3"><b className="text-slate-200">{a}</b><div className="muted mt-1">{b}</div></div>)}</div></div>
+ </div></Shell>;
+}

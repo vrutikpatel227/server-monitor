@@ -1,0 +1,7 @@
+{
+  "name":"server-monitorization","version":"1.0.0","private":true,
+  "scripts":{"dev":"next dev","build":"next build --webpack","start":"next start","worker":"tsx worker/start.ts","agent":"tsx agent/index.ts","db:start":"node scripts/start-postgres.mjs","db:push":"prisma db push","db:generate":"prisma generate","setup":"node scripts/setup-local.mjs","retention":"tsx scripts/retention.mjs"},
+  "dependencies":{"@prisma/client":"6.19.0","@types/bcryptjs":"^2.4.6","bcryptjs":"^3.0.0","lucide-react":"latest","next":"latest","next-auth":"^5.0.0-beta.32","react":"latest","react-dom":"latest","recharts":"latest","zod":"latest"},
+  "devDependencies":{"@tailwindcss/postcss":"latest","@types/node":"latest","@types/react":"latest","@types/react-dom":"latest","autoprefixer":"latest","embedded-postgres":"^16.14.0-beta.17","postcss":"latest","prisma":"6.19.0","tailwindcss":"latest","tsx":"latest","typescript":"latest"},
+  "allowScripts":{"@embedded-postgres/windows-x64@16.14.0-beta.17":true}
+}

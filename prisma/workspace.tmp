@@ -1,0 +1,10 @@
+model Workspace {
+  id String @id @default(cuid())
+  createdAt DateTime @default(now())
+  monitors Monitor[]
+  servers Server[]
+  alerts Alert[]
+  statusPages StatusPage[]
+  settings Setting[]
+}
+
