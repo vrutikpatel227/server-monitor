@@ -9,14 +9,25 @@ type Service={id:string;name:string;url:string;healthPath:string};
 type ApiResult={status?:number;statusText?:string;responseMs?:number;body?:string;error?:string};
 type LocalEvent={id:string;serviceId:string;serviceName:string;kind:"down"|"recovered"|"slow";message:string;time:number};
 
-const DB_NAME="server-monitor-local";
+const DB_NAME="server-monitor-local-v2";
 const DB_VERSION=1;
 const STORE="state";
+const INSTANCE_KEY="server-monitor-local-instance-v2";
 const defaultService:Service={id:"local-default",name:"Localhost 3001",url:"http://localhost:3001",healthPath:"/api/health"};
 
+function getLocalInstanceId(){
+ if(typeof window==="undefined")return "server-render";
+ const existing=window.localStorage.getItem(INSTANCE_KEY);
+ if(existing)return existing;
+ const created=crypto.randomUUID();
+ window.localStorage.setItem(INSTANCE_KEY,created);
+ return created;
+}
+function scopedKey(key:string){return `${getLocalInstanceId()}:${key}`; }
+
 function openLocalDb():Promise<IDBDatabase>{return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE)};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);})}
-async function dbGet<T>(key:string,fallback:T):Promise<T>{try{const db=await openLocalDb();return await new Promise<T>((resolve,reject)=>{const req=db.transaction(STORE,"readonly").objectStore(STORE).get(key);req.onsuccess=()=>resolve((req.result??fallback) as T);req.onerror=()=>reject(req.error)})}catch{return fallback}}
-async function dbSet(key:string,value:unknown){try{const db=await openLocalDb();await new Promise<void>((resolve,reject)=>{const req=db.transaction(STORE,"readwrite").objectStore(STORE).put(value,key);req.onsuccess=()=>resolve();req.onerror=()=>reject(req.error)})}catch{}}
+async function dbGet<T>(key:string,fallback:T):Promise<T>{try{const db=await openLocalDb();return await new Promise<T>((resolve,reject)=>{const req=db.transaction(STORE,"readonly").objectStore(STORE).get(scopedKey(key));req.onsuccess=()=>resolve((req.result??fallback) as T);req.onerror=()=>reject(req.error)})}catch{return fallback}}
+async function dbSet(key:string,value:unknown){try{const db=await openLocalDb();await new Promise<void>((resolve,reject)=>{const req=db.transaction(STORE,"readwrite").objectStore(STORE).put(value,scopedKey(key));req.onsuccess=()=>resolve();req.onerror=()=>reject(req.error)})}catch{}}
 
 
 
