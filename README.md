@@ -53,4 +53,4 @@ Never commit `.env`, database URLs, Resend tokens, or agent tokens.
 6. Test agent offline, recovery, high CPU/RAM/Disk, SSL expiry and monitor DOWN/RECOVERED alerts.
 7. Configure database backups and retention.
 
-AI remains OFF by default and is analysis-only when added.
+
