@@ -128,9 +128,13 @@ export default function LocalMonitor(){
   setApiBusy(true);setApiResult(null);setMessage("");
   const started=performance.now();
   try{
-   const headers={"Content-Type":"application/json"};
-   const init:RequestInit={method:apiMethod,headers,cache:"no-store",signal:AbortSignal.timeout(10000)};
-   if(apiMethod!=="GET"&&apiMethod!=="HEAD"&&apiBody.trim())init.body=apiBody;
+   const init:RequestInit={method:apiMethod,cache:"no-store",signal:AbortSignal.timeout(10000)};
+   // Avoid an unnecessary CORS preflight for simple requests. Only send
+   // Content-Type when a request actually has a JSON body.
+   if(apiMethod!=="GET"&&apiMethod!=="HEAD"&&apiBody.trim()){
+    init.headers={"Content-Type":"application/json"};
+    init.body=apiBody;
+   }
    const r=await fetch(joinUrl(current.url,apiPath),init);
    const responseMs=Math.round(performance.now()-started);
    const body=shortBody(await r.text());
